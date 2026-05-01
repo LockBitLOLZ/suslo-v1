@@ -23,8 +23,7 @@ hex_tu_utf_ = tk.Frame(window, bg="#1e1e1e")
 gluing_files_ = tk.Frame(window, bg="#1e1e1e")
 breakdown_files_ = tk.Frame(window, bg="#1e1e1e")
 login_frame = tk.Frame(window, bg="#1e1e1e")
-
-
+profile_frame = tk.Frame(window, bg="#1e1e1e")
 
 def open_screen(current_frame, target_frame):
     current_frame.pack_forget()
@@ -34,6 +33,9 @@ def back_to_frame(current_frame, target_frame):
     current_frame.pack_forget()
     target_frame.pack(fill="both", expand=True)
 
+profile_key = ''
+profile_key_enabled = False
+profile_key_file = ""
 
 #
 ## граница быстрого шифрования\дешифрования
@@ -63,7 +65,7 @@ text_input = tk.Text(text_frame, height=5, width=60, fg = "#e8e8e8", bg ="#1e1e1
 text_input.pack()
 
 def enter_encrypt_text():
-    INPUT_CHOICE_key = entry_key.get()
+    INPUT_CHOICE_key = get_work_key(entry_key)
     byte_encrypt_text = open_text.get('1.0', tk.END).strip()
     text_input.delete("1.0", tk.END)
     text_input.insert("1.0", encryptedtext(INPUT_CHOICE_key, byte_encrypt_text))
@@ -93,7 +95,7 @@ byte_text_input = tk.Text(text_frame, height=5, width=60, fg = "#e8e8e8", bg ="#
 byte_text_input.pack()
 
 def enter_decrypt_text():
-    INPUT_CHOICE_key = entry_key2.get()
+    INPUT_CHOICE_key = get_work_key(entry_key2)
     byte_decrypt_text = byte_text_input.get('1.0', tk.END).strip()
     byte_text_input.delete("1.0", tk.END)
     byte_text_input.insert("1.0", decryptedtext(INPUT_CHOICE_key, byte_decrypt_text))
@@ -167,7 +169,7 @@ out_message = tk.Text(file_crypt_frame, height=1, width=30, fg = "#e8e8e8", bg =
 out_message.pack()
 
 def create_file_crypt():
-    INPUT_CHOICE_key = entry_key3.get()
+    INPUT_CHOICE_key = get_work_key(entry_key3)
     filename = selected_file
     out_message.delete("1.0", tk.END)
     out_message.insert("1.0", encryptedfile(INPUT_CHOICE_key, filename))
@@ -208,7 +210,7 @@ out_message1 = tk.Text(file_crypt_frame, height=1, width=30, fg = "#e8e8e8", bg 
 out_message1.pack()
 
 def create_file_decrypt():
-    input_choice_key = entry_key4.get()
+    input_choice_key = get_work_key(entry_key4)
     filename = selected_file1
     out_message1.delete("1.0", tk.END)
     out_message1.insert("1.0", decryptedfile(input_choice_key, filename))
@@ -300,6 +302,79 @@ button_back_text1 = tk.Button(tools_menu_frame, text="Назад",
  fg = "#e8e8e8", bg ="#1e1e1e", command=lambda: back_to_frame(tools_menu_frame, main_menu_frame))
 button_back_text1.pack(pady=150)
 ##граница меню инструментов
+
+def select_profile_key_file():
+    global profile_key_file
+    filename = filedialog.askopenfilename()
+    if filename:
+        profile_key_file = filename
+        profile_key_path.delete(0, tk.END)
+        profile_key_path.insert(0, filename)
+        profile_status.delete("1.0", tk.END)
+        profile_status.insert("1.0", "Файл ключа выбран")
+
+def use_profile_key():
+    global profile_key
+    global profile_key_enabled
+    if not profile_key_file:
+        profile_status.delete("1.0", tk.END)
+        profile_status.insert("1.0", "Выберите файл с ключом")
+        return
+    with open(profile_key_file, "rb") as f:
+        profile_key = f.read()
+    profile_key_enabled = True
+    profile_status.delete("1.0", tk.END)
+    profile_status.insert("1.0", "Ключ профиля включен")
+
+def disable_profile_key():
+    global profile_key
+    global profile_key_enabled
+    profile_key = ""
+    profile_key_enabled = False
+    profile_status.delete("1.0", tk.END)
+    profile_status.insert("1.0", "Ключ профиля отключен")
+
+def get_work_key(entry_widget):
+    if profile_key_enabled and profile_key:
+        return profile_key
+    return entry_widget.get().strip()
+
+profile_title = tk.Label(profile_frame, text="Профиль", font=("Arial", 18, "bold"),
+fg="#e8e8e8", bg="#1e1e1e")
+profile_title.pack(pady=20)
+
+ttk.Separator(profile_frame, orient="horizontal").pack(fill="x")
+
+profile_key_label = tk.Label(profile_frame, text="Ключ профиля",
+fg="#e8e8e8", bg="#1e1e1e")
+profile_key_label.pack()
+
+profile_key_path = tk.Entry(profile_frame, width=70, fg="#e8e8e8", bg="#1e1e1e")
+profile_key_path.pack(pady=5)
+
+button_select_profile_key = tk.Button(profile_frame, text="Выбрать ключ из файла",
+fg="#e8e8e8", bg="#1e1e1e", command=select_profile_key_file)
+button_select_profile_key.pack(pady=5)
+
+button_use_profile_key = tk.Button(profile_frame, text="Использовать ключ везде",
+fg="#e8e8e8", bg="#1e1e1e", command=use_profile_key)
+button_use_profile_key.pack(pady=5)
+
+button_disable_profile_key = tk.Button(profile_frame, text="Отключить ключ профиля",
+fg="#e8e8e8", bg="#1e1e1e", command=disable_profile_key)
+button_disable_profile_key.pack(pady=5)
+
+profile_status_label = tk.Label(profile_frame, text="Статус",
+fg="#e8e8e8", bg="#1e1e1e")
+profile_status_label.pack()
+
+profile_status = tk.Text(profile_frame, height=2, width=60, fg="#e8e8e8", bg="#1e1e1e")
+profile_status.pack(pady=5)
+
+button_back_profile = tk.Button(profile_frame, text="Назад",
+fg="#e8e8e8", bg="#1e1e1e", command=lambda: back_to_frame(profile_frame, main_menu_frame))
+button_back_profile.pack(pady=20)
+
 #разбивка файлов mail:hash
 menu_title = tk.Label(spliter_mail_hash_, text="Разбивка файлов mail:hash", font=("Arial", 18, "bold"),
 fg = "#e8e8e8", bg ="#1e1e1e")
@@ -487,9 +562,16 @@ label_title9.place(x=237, y=90, width=221, height=50)
 big_button_key = tk.Button(main_menu_frame, text="Инструменты",
 fg = "#e8e8e8", bg ="#303030", width=30, height=3, bd=0, command=lambda: open_screen(main_menu_frame, tools_menu_frame))
 big_button_key.place(x=240, y=93, width=215, height=44)
+
+profile123 = tk.Label(main_menu_frame, text="", bg ="#ff0000", bd=0)
+profile123.place(x=464, y=90, width=221, height=50)
+
+profile = tk.Button(main_menu_frame, text="Профиль",
+fg = "#e8e8e8", bg ="#303030", width=30, height=3, bd=0, command=lambda: open_screen(main_menu_frame, profile_frame))
+profile.place(x=467, y=93, width=215, height=44)
 ###граница ультра главного меню
 ###граница входа в приложение
-login_title = tk.Label(login_frame, text="SusloRebern", font=("Arial", 18, "bold"),
+login_title = tk.Label(login_frame, text="SusloReborn", font=("Arial", 18, "bold"),
 fg = "#e8e8e8", bg ="#1e1e1e")
 login_title.pack(pady=20)
 
